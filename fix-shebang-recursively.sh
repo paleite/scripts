@@ -1,17 +1,24 @@
 #!/usr/bin/env bash
 
-# Replace the first line of every shell script in the current directory
-find . -type f -name "*.sh" -not -path "./node_modules/*" -not -path "./.git/*" | while read -r file; do
-  # Save the current first line of the file
-  first_line=$(head -n 1 "$file")
+# Replaces `#!/bin/bash` with `#!/usr/bin/env bash` in every shell script
+# recursively, starting from the current directory.
 
-  # Check if the first line is a shebang line
-  if [[ $first_line != "#!/bin/bash"* ]]; then
+[[ "${DEBUG}" == 'true' ]] && set -o xtrace
+set -o errexit
+set -o pipefail
+set -o nounset
+
+# Recursively iterate over shell-files starting from the current directory
+find . -type f -name "*.sh" -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/coverage/*" -not -path "*/dist/*" | while read -r file; do
+  shebang=$(head -n 1 "$file")
+
+  # Skip files that don't start with `#!/bin/bash`
+  if [[ $shebang != "#!/bin/bash"* ]]; then
     continue
   fi
 
   echo "Fixing $file"
 
-  # Replace the first line with the new shebang line
+  # Replace the first line with `#!/usr/bin/env bash`
   sed -i.bak -e "1s/.*/#!\/usr\/bin\/env bash/" "$file"
 done
